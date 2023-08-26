@@ -1,0 +1,22 @@
+{{ define "header" }}
+<head>
+  <title>{{ .Title }}</title>
+  <script src="static/htmx.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+<nav class="flex bg-primary-900 p-4">
+  <ul class="flex">
+    <li class="mr-6">
+      <a class="text-blue-500 hover:text-blue-800" href="/">Home</a>
+    </li>
+    <li class="mr-6">
+      <a class="text-blue-500 hover:text-blue-800" href="/register">Register</a>
+    </li>
+    <li class="mr-6">
+      <a class="text-gray-400" href="/login">Login</a>
+    </li>
+  </ul>
+</nav>
+{{ end }}

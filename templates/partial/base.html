@@ -1,0 +1,10 @@
+{{ define "base" }}
+<!DOCTYPE html>
+<html class="h-full">
+  <body class="h-full flex flex-col">
+    {{ template "header" . }}
+    <main class="h-full p-4 flex-1">{{ template "content" . }}</main>
+    {{ template "footer" . }}
+  </body>
+</html>
+{{end}}
