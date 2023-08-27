@@ -59,8 +59,6 @@ func (u *UserService) CreateUser(email string, password string) (*UserModel, err
 
 	hash, err := hashPassword(password)
 
-	fmt.Println("hash", hash)
-
 	if err != nil {
 		return nil, err
 	}

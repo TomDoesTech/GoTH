@@ -1,0 +1,28 @@
+{{ define "nav" }}
+<nav class="flex bg-primary-600 p-4 justify-between">
+  <ul class="flex">
+    <li class="mr-6">
+      <a class="text-gray-200 hover:text-blue-800" href="/">Home</a>
+    </li>
+  </ul>
+  <ul class="flex">
+    {{ if .User }}
+    <li class="mr-6 text-gray-200">Welcome {{ .User.email }}</li>
+    <li>
+      <form hx-post="/api/logout">
+        <button class="text-gray-200 hover:text-blue-800" type="submit">
+          Logout
+        </button>
+      </form>
+    </li>
+    {{ else }}
+    <li class="mr-6">
+      <a class="text-gray-200 hover:text-blue-800" href="/register">Register</a>
+    </li>
+    <li class="mr-6">
+      <a class="text-gray-200" href="/login">Login</a>
+    </li>
+    {{ end }}
+  </ul>
+</nav>
+{{ end }}

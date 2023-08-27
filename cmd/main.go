@@ -6,17 +6,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+
 	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-playground/validator/v10"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tomdoestech/goth/internal/auth"
 	"github.com/tomdoestech/goth/internal/middleware"
 	"github.com/tomdoestech/goth/internal/pkg/config"
+	"github.com/tomdoestech/goth/internal/pkg/metrics"
 	users "github.com/tomdoestech/goth/internal/user"
+	"github.com/tomdoestech/goth/internal/web"
 	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -24,14 +26,16 @@ import (
 
 var tokenAuth *jwtauth.JWTAuth
 
-func startMetricsServer(logger *zap.Logger) {
-	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":9100", nil)
-	logger.Info("Metrics server started on port 9100")
-}
-
 // use a single instance of Validate, it caches struct info
 var validate *validator.Validate
+
+func TokenFromCookie(r *http.Request) string {
+	cookie, err := r.Cookie("token")
+	if err != nil {
+		return ""
+	}
+	return cookie.Value
+}
 
 func main() {
 
@@ -53,16 +57,13 @@ func main() {
 
 	r := chi.NewRouter()
 
+	r.Use(metrics.NewPatternMiddleware(conf.ServiceName))
+
 	r.Use(middleware.RenderMiddleware)
 
-	fileServer := http.FileServer(http.Dir("./static"))
-	r.Handle("/static/*", http.StripPrefix("/static/", fileServer))
-
-	r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
-	})
-
 	tokenAuth = jwtauth.New("RS256", conf.JWTPrivateKey, conf.JWTPublicKey)
+
+	r.Use(jwtauth.Verify(tokenAuth, TokenFromCookie))
 
 	usersService := users.NewUserService(users.UserServiceParams{
 		Logger:   logger,
@@ -84,34 +85,23 @@ func main() {
 		},
 	)
 
+	webHandler := web.NewWebHandler(
+		web.WebHandlerParams{
+			Logger: logger,
+		},
+	)
+
 	auth.NewAuthHTTP(auth.AuthHTTPParams{
 		AuthHandler: authHandler,
 		Mux:         r,
 	})
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		data := map[string]interface{}{
-			"Title":  "My Website",
-			"Header": "Welcome to my website!",
-			"Footer": "© 2023 My Website",
-		}
-
-		// Render the home.html template and inject data
-		middleware.RenderTemplate(w, "home.html", data)
+	web.NewWebHTTP(web.WebHTTPParams{
+		WebHandler: webHandler,
+		Mux:        r,
 	})
 
-	r.Get("/about", func(w http.ResponseWriter, r *http.Request) {
-		data := map[string]interface{}{
-			"Title":  "About",
-			"Header": "Welcome to my website!",
-			"Footer": "© 2023 My Website",
-		}
-
-		// Render the home.html template and inject data
-		middleware.RenderTemplate(w, "about.html", data)
-	})
-
-	go startMetricsServer(logger)
+	go metrics.StartMetricsServer(logger)
 
 	srv := &http.Server{
 		Addr:    conf.Port,

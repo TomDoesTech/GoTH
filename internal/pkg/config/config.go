@@ -14,11 +14,12 @@ import (
 )
 
 type Config struct {
-	DBHost     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	Port       string
+	DBHost      string
+	DBUser      string
+	DBPassword  string
+	DBName      string
+	Port        string
+	ServiceName string
 
 	JWTPrivateKey *rsa.PrivateKey
 	JWTPublicKey  *rsa.PublicKey
@@ -67,11 +68,18 @@ func Must() Config {
 		log.Fatal("Error parsing public key:", err)
 	}
 
+	ServiceName := viper.GetString("SERVICE_NAME")
+
+	if ServiceName == "" {
+		ServiceName = "goth"
+	}
+
 	return Config{
 		DBHost:        viper.GetString("DATABASE_HOST"),
 		DBUser:        viper.GetString("DATABASE_USER"),
 		DBPassword:    viper.GetString("DATABASE_PASSWORD"),
 		DBName:        viper.GetString("DATABASE_NAME"),
+		ServiceName:   ServiceName,
 		JWTPrivateKey: JWTPrivateKey,
 		JWTPublicKey:  JWTPublicKey,
 		Port:          port,

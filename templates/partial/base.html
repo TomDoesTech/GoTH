@@ -1,8 +1,9 @@
 {{ define "base" }}
 <!DOCTYPE html>
 <html class="h-full">
+  {{ template "header" . }}
   <body class="h-full flex flex-col">
-    {{ template "header" . }}
+    {{ template "nav" . }}
     <main class="h-full p-4 flex-1">{{ template "content" . }}</main>
     {{ template "footer" . }}
   </body>

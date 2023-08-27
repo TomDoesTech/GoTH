@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-playground/validator/v10"
 	users "github.com/tomdoestech/goth/internal/user"
@@ -24,6 +25,16 @@ type AuthHandlerParams struct {
 	Logger      *zap.Logger
 }
 
+type loginData struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6,max=32"`
+}
+
+type registrationData struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6,max=32"`
+}
+
 func NewAuthHandler(p AuthHandlerParams) *AuthHandler {
 	return &AuthHandler{
 		authService: p.AuthService,
@@ -33,18 +44,19 @@ func NewAuthHandler(p AuthHandlerParams) *AuthHandler {
 	}
 }
 
-type loginData struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
 
-	var data loginData
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	data := loginData{
+		Email:    email,
+		Password: password,
+	}
 
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		http.Error(w, "Invalid request data", http.StatusBadRequest)
+	err := a.validate.Struct(&data)
+	if err != nil {
+		// Handle validation errors
+		handleValidationErrors(w, err)
 		return
 	}
 
@@ -74,18 +86,14 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return token to the client
-	response := map[string]string{
-		"token": token,
-	}
+	// set the cookie
+	expiration := time.Now().Add(365 * 24 * time.Hour)
+	cookie := http.Cookie{Name: "token", Value: token, Expires: expiration, Path: "/"}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
-}
+	http.SetCookie(w, &cookie)
 
-type registrationData struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8,max=32"`
+	w.Header().Set("HX-Redirect", "/")
+	w.WriteHeader(http.StatusOK)
 }
 
 func handleValidationErrors(w http.ResponseWriter, err error) {
@@ -114,44 +122,46 @@ func handleValidationErrors(w http.ResponseWriter, err error) {
 }
 
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	defer r.Body.Close()
-	var data registrationData
 
-	// Parse the request body
-	err := json.NewDecoder(r.Body).Decode(&data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+	data := registrationData{
+		Email:    email,
+		Password: password,
 	}
 
+	err := a.validate.Struct(&data)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 
-	err = a.validate.Struct(&data)
-	if err != nil {
+		fmt.Println(err)
+
 		// Handle validation errors
 		handleValidationErrors(w, err)
 		return
 	}
 
-	user, err := a.userService.CreateUser(data.Email, data.Password)
+	_, err = a.userService.CreateUser(data.Email, data.Password)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	// return html
+	w.Header().Set("Content-Type", "text/html charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 
-	json.NewEncoder(w).Encode(interface{}(
-		map[string]interface{}{
-			"id":         user.ID,
-			"email":      user.Email,
-			"created_at": user.CreatedAt,
-			"updated_at": user.UpdatedAt,
-		},
-	))
+	fmt.Fprintf(w, "<h1>Registration successful</h1><p>Go to <a href=\"/login\">login</a></p>")
+}
+
+func (a *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+
+	// set the cookie
+	expiration := time.Now().Add(-365 * 24 * time.Hour)
+	cookie := http.Cookie{Name: "token", Value: "", Expires: expiration, Path: "/"}
+
+	http.SetCookie(w, &cookie)
+
+	w.Header().Set("HX-Redirect", "/")
+	w.WriteHeader(http.StatusOK)
 }
