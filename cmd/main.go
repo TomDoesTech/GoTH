@@ -14,7 +14,6 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/tomdoestech/goth/internal/auth"
-	"github.com/tomdoestech/goth/internal/middleware"
 	"github.com/tomdoestech/goth/internal/pkg/config"
 	"github.com/tomdoestech/goth/internal/pkg/metrics"
 	users "github.com/tomdoestech/goth/internal/user"
@@ -58,8 +57,6 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(metrics.NewPatternMiddleware(conf.ServiceName))
-
-	r.Use(middleware.RenderMiddleware)
 
 	tokenAuth = jwtauth.New("RS256", conf.JWTPrivateKey, conf.JWTPublicKey)
 
