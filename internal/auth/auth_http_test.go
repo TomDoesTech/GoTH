@@ -4,6 +4,7 @@
 package auth
 
 import (
+	"io"
 	"log"
 	"net/http/httptest"
 	"net/url"
@@ -32,17 +33,37 @@ func TempFilename(t testing.TB) string {
 func TestRegister(t *testing.T) {
 
 	testCases := []struct {
-		description        string
-		formData           url.Values
-		expectedStatusCode int
+		description          string
+		formData             url.Values
+		expectedStatusCode   int
+		expectedResponseBody string
 	}{
 		{
-			description: "create user and return 201",
+			description: "create user",
 			formData: url.Values{
 				"email":    {"test@example.com"},
 				"password": {"password"},
 			},
-			expectedStatusCode: 201,
+			expectedStatusCode:   201,
+			expectedResponseBody: "<h1>Registration successful</h1><p>Go to <a href=\"/login\">login</a></p>",
+		},
+		{
+			description: "invalid email",
+			formData: url.Values{
+				"email":    {"test@example"},
+				"password": {"password"},
+			},
+			expectedStatusCode:   400,
+			expectedResponseBody: "<h1>Validation error</h1><ul><li>Email is email</li></ul>",
+		},
+		{
+			description: "invalid password",
+			formData: url.Values{
+				"email":    {"test@example.com"},
+				"password": {"1"},
+			},
+			expectedStatusCode:   400,
+			expectedResponseBody: "<h1>Validation error</h1><ul><li>Password is min</li></ul>",
 		},
 	}
 
@@ -101,6 +122,15 @@ func TestRegister(t *testing.T) {
 
 			assert.Equal(tc.expectedStatusCode, w.Code)
 
+			res := w.Result()
+
+			defer res.Body.Close()
+			data, err := io.ReadAll(res.Body)
+			if err != nil {
+				t.Errorf("expected error to be nil got %v", err)
+			}
+
+			assert.Equal(tc.expectedResponseBody, string(data))
 		})
 	}
 

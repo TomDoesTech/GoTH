@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -116,9 +115,16 @@ func handleValidationErrors(w http.ResponseWriter, err error) {
 	}
 
 	// Return the array of error messages with status 401
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusUnauthorized)
-	json.NewEncoder(w).Encode(errorMessages)
+	w.Header().Set("Content-Type", "text/html charset=utf-8")
+	w.WriteHeader(http.StatusBadRequest)
+
+	errorMessagesHTML := ""
+	for _, errorMessage := range errorMessages {
+		errorMessagesHTML += fmt.Sprintf("<li>%s</li>", errorMessage)
+	}
+
+	fmt.Fprintf(w, "<h1>Validation error</h1><ul>%s</ul>", errorMessagesHTML)
+
 }
 
 func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
