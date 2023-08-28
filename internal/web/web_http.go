@@ -9,7 +9,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/tomdoestech/goth/internal/middleware"
 )
 
 type WebHTTPParams struct {
@@ -93,7 +92,7 @@ func NewWebHTTP(p WebHTTPParams) {
 		}
 
 		// Render the home.html template and inject data
-		middleware.RenderTemplate(w, "home.html", data, r)
+		RenderTemplate(w, "home.html", data, r)
 	})
 
 	r.Get("/about", func(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +101,7 @@ func NewWebHTTP(p WebHTTPParams) {
 		}
 
 		// Render the home.html template and inject data
-		middleware.RenderTemplate(w, "about.html", data, r)
+		RenderTemplate(w, "about.html", data, r)
 	})
 
 }
