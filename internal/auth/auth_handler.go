@@ -52,6 +52,9 @@ func (a *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Password: password,
 	}
 
+	a.logger.Info("Login", zap.String("email", data.Email))
+	a.logger.Info("Login", zap.String("password", data.Password))
+
 	err := a.validate.Struct(&data)
 	if err != nil {
 		// Handle validation errors
