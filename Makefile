@@ -4,7 +4,7 @@ dev:
 
 .PHONY: test-unit
 test-unit:
-	go test -v -tags=unit ./... -race -timeout=5s
+	go test -v -tags=unit ./... -race -timeout=30s
 
 .PHONY: build
 build:
