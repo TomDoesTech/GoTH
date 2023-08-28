@@ -138,9 +138,6 @@ func (a *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	err := a.validate.Struct(&data)
 	if err != nil {
-
-		fmt.Println(err)
-
 		// Handle validation errors
 		handleValidationErrors(w, err)
 		return
