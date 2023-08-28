@@ -1,6 +1,8 @@
 #!/bin/bash
 
 
+go mod tidy
+
 generateKeys(){
     # Generate private key
     openssl genpkey -algorithm RSA -out private_key.pem

@@ -5,12 +5,36 @@
 </div>
 
 ## Getting started
+
+### Setup script
+Inside the root directory is a `setup.sh`` script that will create a public/private key pair, add them to a .env file and the module with your module name.
+
+Make the script executable
+```base
+chmod +x setup.sh
+```
+
+Run the script
+```bash
+./setup.sh
+```
+
+### Manual setup
 1. Clone the repo
 1. Run `go mod tidy`
 1. Create a .env file for local development with a base64 encoded `JWT_PRIVATE_KEY` and a base64 encoded `JWT_PUBLIC_KEY`
 1. Find and replace `github.com/tomdoestech/goth` with your own module name
 1. Download `Air` - https://github.com/cosmtrek/air
-1. Run `air` to start the dev server
+
+### Running the server
+```base
+make dev
+```
+
+### Running the tests
+```base
+make test
+```
 
 The `JWT_PRIVATE_KEY` and `JWT_PUBLIC_KEY` are base64 encoded to eliminate issues with formatting the keys. You can use keys that aren't base64 encoded by updating `internal/config/config.go` and removing the decode functionality.
 
