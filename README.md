@@ -7,9 +7,12 @@
 ## Getting started
 1. Clone the repo
 1. Run `go mod tidy`
-1. Fine and replace `github.com/tomdoestech/goth` with your own module name
+1. Create a .env file for local development with a base64 encoded `JWT_PRIVATE_KEY` and a base64 encoded `JWT_PUBLIC_KEY`
+1. Find and replace `github.com/tomdoestech/goth` with your own module name
 1. Download `Air` - https://github.com/cosmtrek/air
 1. Run `air` to start the dev server
+
+The `JWT_PRIVATE_KEY` and `JWT_PUBLIC_KEY` are base64 encoded to eliminate issues with formatting the keys. You can use keys that aren't base64 encoded by updating `internal/config/config.go` and removing the decode functionality.
 
 ## Contributing
 Contributions are welcome. Please open an issue to discuss your idea before opening a PR unless it's a fix for a bug or a typo.
